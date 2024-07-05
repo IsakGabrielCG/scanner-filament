@@ -13,10 +13,14 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+// Route::get('/', function () {
+//     return view('welcome');
+// });
 
 Route::get('/code', function () {
     return view('qr-code');
+});
+
+Route::get('/', function () {
+    return view('welcome');
 });

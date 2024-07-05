@@ -1,3 +1,4 @@
+<!-- No seu arquivo blade do Livewire -->
 <div>
     <!-- Começa o script para qrcode -->
     <!-- Vídeo da câmera -->
@@ -6,7 +7,11 @@
     <!-- Estilo CSS -->
     <style>
         .mirrored-video {
-            width: 50%;
+            /* transform: scaleX(-1);
+            /* Espelha horizontalmente o vídeo */
+            /* transform-origin: center;  */
+            /* Define o ponto de origem da transformação */
+            width: 100%;
         }
     </style>
 
@@ -35,8 +40,11 @@
         // Função para ajustar a orientação da câmera no dispositivo móvel
         function adjustCameraOrientation(selectedCameraId) {
             if (isMobileDevice) {
+                // Verifica a orientação do dispositivo e aplica a transformação necessária
                 if (selectedCameraId === 'back') {
+
                     preview.style.transform = 'rotate(0deg)';
+
                 } else {
                     preview.style.transform = 'rotate(0deg)';
                 }
@@ -46,7 +54,7 @@
         }
 
         // Chama a função ao carregar a página e ao redimensionar a janela
-        adjustCameraOrientation('back'); // Inicia com a câmera frontal por padrão
+        adjustCameraOrientation('front'); // Inicia com a câmera frontal por padrão
         
         window.addEventListener('resize', function() {
             const selectedCameraId = document.getElementById('cameraOptions').value;
@@ -58,121 +66,70 @@
         // Função para listar as câmeras e configurar o scanner
         function listCamerasAndSetup() {
             Instascan.Camera.getCameras().then(function(cameras) {
-                if (isMobileDevice) {
-                    let frontCamera = null;
-                    let backCamera = null;
+                let frontCamera = null;
+                let backCamera = null;
 
-                    cameras.forEach(function(camera) {
-                        if (camera.name.toLowerCase().includes('front') && !frontCamera) {
-                            frontCamera = camera;
-                        } else if (camera.name.toLowerCase().includes('back') && !backCamera) {
-                            backCamera = camera;
-                        }
-                    });
-
-                    if (frontCamera && backCamera) {
-                        setupScanner(frontCamera, backCamera);
-                        showCameraOptions(frontCamera, backCamera);
-                    } else {
-                        console.error('No suitable cameras found.');
+                // Filtra as câmeras frontal e traseira, se disponíveis
+                cameras.forEach(function(camera) {
+                    if (camera.name.toLowerCase().includes('front') && !frontCamera) {
+                        frontCamera = camera;
+                    } else if (camera.name.toLowerCase().includes('back') && !backCamera) {
+                        backCamera = camera;
                     }
+                });
+
+                // Configura o scanner com a câmera frontal e/ou traseira encontrada
+                if (frontCamera && backCamera) {
+                    setupScanner(frontCamera, backCamera); // Passa as duas câmeras encontradas
+                    showCameraOptions(frontCamera, backCamera); // Exibe as opções de câmera
                 } else {
-                    if (cameras.length > 0) {
-                        setupScannerForPC(cameras);
-                    } else {
-                        console.error('No cameras found.');
-                    }
+                    console.error('No suitable cameras found.');
                 }
             }).catch(function(e) {
                 console.error(e);
             });
         }
 
-        // Função para configurar o scanner com a câmera selecionada (dispositivos móveis)
+        // Função para configurar o scanner com a câmera selecionada
         function setupScanner(frontCamera, backCamera) {
             scanner = new Instascan.Scanner({
                 video: preview
             });
 
+            // Inicia o scanner com a câmera frontal por padrão
             scanner.addListener('scan', function(content) {
                 console.log(content);
-                updateScannedData(content);
+                updateScannedData(content); // Atualiza a tabela com o código escaneado
             });
 
-            scanner.start(frontCamera);
+            scanner.start(frontCamera); // Inicia o scanner com a câmera frontal
 
+            // Listener para mudança de câmera
             document.getElementById('cameraOptions').addEventListener('change', function() {
                 const selectedCameraId = this.value;
-                adjustCameraOrientation(selectedCameraId);
+                adjustCameraOrientation(selectedCameraId); // Ajusta a orientação ao trocar a câmera
                 const selectedCamera = selectedCameraId === 'front' ? frontCamera : backCamera;
                 if (selectedCamera) {
-                    scanner.stop();
-                    scanner.start(selectedCamera);
+                    scanner.stop(); // Para o scanner atual
+                    scanner.start(selectedCamera); // Inicia o scanner com a câmera selecionada
                 } else {
                     console.error('Selected camera not found.');
                 }
             });
         }
 
-        // Função para configurar o scanner com a câmera selecionada (PC)
-        function setupScannerForPC(cameras) {
-            const cameraOptions = document.getElementById('cameraOptions');
-
-            scanner = new Instascan.Scanner({
-                video: preview
-            });
-
-            cameras.forEach(function(camera) {
-                const option = document.createElement('option');
-                option.value = camera.id;
-                option.textContent = camera.name || `Camera ${camera.id}`;
-                cameraOptions.appendChild(option);
-            });
-
-            scanner.addListener('scan', function(content) {
-                console.log(content);
-                updateScannedData(content);
-            });
-
-            if (cameras.length > 0) {
-                scanner.start(cameras[0]);
-            } else {
-                console.error('No cameras found.');
-            }
-
-            document.getElementById('cameraOptions').addEventListener('change', function() {
-                const selectedCameraId = this.value;
-                changeCamera(selectedCameraId);
-            });
-        }
-
-        // Função para mudar a câmera do scanner
-        function changeCamera(cameraId) {
-            if (scanner) {
-                scanner.stop();
-                Instascan.Camera.getCameras().then(function(cameras) {
-                    const selectedCamera = cameras.find(camera => camera.id === cameraId);
-                    if (selectedCamera) {
-                        scanner.start(selectedCamera);
-                    } else {
-                        console.error('Camera not found.');
-                    }
-                }).catch(function(e) {
-                    console.error(e);
-                });
-            }
-        }
-
-        // Função para exibir as opções de câmera no elemento select (dispositivos móveis)
+        // Função para exibir as opções de câmera no elemento select
         function showCameraOptions(frontCamera, backCamera) {
             const cameraOptions = document.getElementById('cameraOptions');
-            cameraOptions.innerHTML = '';
+            cameraOptions.innerHTML = ''; // Limpa as opções existentes
 
+            // Adiciona a opção de câmera frontal
             const frontOption = document.createElement('option');
             frontOption.value = 'front';
             frontOption.textContent = frontCamera.name || 'Front Camera';
             cameraOptions.appendChild(frontOption);
 
+            // Adiciona a opção de câmera traseira
             const backOption = document.createElement('option');
             backOption.value = 'back';
             backOption.textContent = backCamera.name || 'Back Camera';
