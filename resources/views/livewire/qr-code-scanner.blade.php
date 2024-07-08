@@ -1,13 +1,24 @@
 <div>
-    <!-- Começa o script para qrcode -->
     <!-- Vídeo da câmera -->
     <video id="preview" class="mirrored-video"></video>
 
     <!-- Estilo CSS -->
     <style>
         .mirrored-video {
+            transform: scaleX(-1);
+            /* Inverte horizontalmente */
             width: 50%;
         }
+
+        /* Esconder o seletor de câmeras em dispositivos móveis */
+        @media only screen and (max-width: 768px) {
+            #cameraOptionsContainer {
+                display: none;
+            }
+        }
+
+
+        
     </style>
 
     <!-- Mostrar o código escaneado -->
@@ -25,6 +36,8 @@
     </div>
     <!-- -------------------------------------- -->
 
+    <!-- Div para exibir a mensagem -->
+
     <!-- Inclua o script para instascan -->
     <script type="text/javascript" src="https://rawgit.com/schmich/instascan-builds/master/instascan.min.js"></script>
 
@@ -36,22 +49,19 @@
         function adjustCameraOrientation(selectedCameraId) {
             if (isMobileDevice) {
                 if (selectedCameraId === 'back') {
-                    preview.style.transform = 'rotate(0deg)';
+                    preview.style.transform = 'rotateY(180deg) scaleX(-1)';
                 } else {
-                    preview.style.transform = 'rotate(0deg)';
+                    preview.style.transform = ' scaleX(-1)';
                 }
             } else {
-                preview.style.transform = 'none'; // Reset transform for non-mobile devices
+                preview.style.transform = 'scaleX(-1)';
+
             }
         }
 
-        // Chama a função ao carregar a página e ao redimensionar a janela
-        adjustCameraOrientation('back'); // Inicia com a câmera frontal por padrão
-        
-        window.addEventListener('resize', function() {
-            const selectedCameraId = document.getElementById('cameraOptions').value;
-            adjustCameraOrientation(selectedCameraId);
-        });
+
+        // Chama a função ao redimensionar a janela
+
 
         let scanner = null; // Inicializa o scanner Instascan
 
@@ -59,20 +69,16 @@
         function listCamerasAndSetup() {
             Instascan.Camera.getCameras().then(function(cameras) {
                 if (isMobileDevice) {
-                    let frontCamera = null;
                     let backCamera = null;
 
                     cameras.forEach(function(camera) {
-                        if (camera.name.toLowerCase().includes('front') && !frontCamera) {
-                            frontCamera = camera;
-                        } else if (camera.name.toLowerCase().includes('back') && !backCamera) {
+                        if (camera.name.toLowerCase().includes('back') && !backCamera) {
                             backCamera = camera;
                         }
                     });
 
-                    if (frontCamera && backCamera) {
-                        setupScanner(frontCamera, backCamera);
-                        showCameraOptions(frontCamera, backCamera);
+                    if (backCamera) {
+                        setupScanner(backCamera);
                     } else {
                         console.error('No suitable cameras found.');
                     }
@@ -89,9 +95,19 @@
         }
 
         // Função para configurar o scanner com a câmera selecionada (dispositivos móveis)
-        function setupScanner(frontCamera, backCamera) {
+        function setupScanner(backCamera) {
             scanner = new Instascan.Scanner({
                 video: preview
+            });
+
+            if (isMobileDevice) {
+                preview.classList.add('Hide');
+            }
+
+            // orientar imagem depois que ela aparecer na tela
+            preview.addEventListener('loadedmetadata', function() {
+                const selectedCameraId = 'back'; 
+                adjustCameraOrientation(selectedCameraId);
             });
 
             scanner.addListener('scan', function(content) {
@@ -99,19 +115,7 @@
                 updateScannedData(content);
             });
 
-            scanner.start(frontCamera);
-
-            document.getElementById('cameraOptions').addEventListener('change', function() {
-                const selectedCameraId = this.value;
-                adjustCameraOrientation(selectedCameraId);
-                const selectedCamera = selectedCameraId === 'front' ? frontCamera : backCamera;
-                if (selectedCamera) {
-                    scanner.stop();
-                    scanner.start(selectedCamera);
-                } else {
-                    console.error('Selected camera not found.');
-                }
-            });
+            scanner.start(backCamera);
         }
 
         // Função para configurar o scanner com a câmera selecionada (PC)
@@ -163,22 +167,6 @@
             }
         }
 
-        // Função para exibir as opções de câmera no elemento select (dispositivos móveis)
-        function showCameraOptions(frontCamera, backCamera) {
-            const cameraOptions = document.getElementById('cameraOptions');
-            cameraOptions.innerHTML = '';
-
-            const frontOption = document.createElement('option');
-            frontOption.value = 'front';
-            frontOption.textContent = frontCamera.name || 'Front Camera';
-            cameraOptions.appendChild(frontOption);
-
-            const backOption = document.createElement('option');
-            backOption.value = 'back';
-            backOption.textContent = backCamera.name || 'Back Camera';
-            cameraOptions.appendChild(backOption);
-        }
-
         // Função para atualizar a tabela com o código escaneado
         function updateScannedData(content) {
             let scannedData = document.getElementById('scannedData');
@@ -191,8 +179,8 @@
         listCamerasAndSetup();
     </script>
 
-    <!-- Interface para escolha da câmera -->
-    <div>
+    <!-- Interface para escolha da câmera (apenas PC) -->
+    <div id="cameraOptionsContainer">
         <select id="cameraOptions">
             <!-- Opções de câmera serão adicionadas dinamicamente aqui -->
         </select>
