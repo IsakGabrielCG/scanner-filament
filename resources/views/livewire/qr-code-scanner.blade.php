@@ -1,23 +1,20 @@
 <div>
     <!-- Vídeo da câmera -->
-    <video id="preview" class="mirrored-video"></video>
+    <div>
+        {{-- mostra a camera --}}
+        <div class="qrscanner" id="scanner">
+        </div>
+
+    </div>
 
     <!-- Estilo CSS -->
-    <style>
-        .mirrored-video {
-            transform: scaleX(-1);
-            /* Inverte horizontalmente */
-            width: 50%;
-        }
-        
-    </style>
 
     <!-- Mostrar o código escaneado -->
     <div class="table-responsive">
         <table class="table table-bordered table-hover">
             <thead>
                 <tr>
-                    <th>Name</th>
+                    <th>Código Escaneado</th>
                 </tr>
             </thead>
             <tbody id="scannedData">
@@ -27,116 +24,83 @@
     </div>
     <!-- -------------------------------------- -->
 
-    <!-- Div para exibir a mensagem -->
+
 
     <!-- Inclua o script para instascan -->
-    <script type="text/javascript" src="js/instascan.min.js"></script>
+    <script type="text/javascript" src="/js/js/jsqrscanner.nocache.js"></script>
 
-    {{-- <script type="text/javascript" src="{{ asset('js/instascan.min.js') }}"></script> 
-    
-    
-    <script type="text/javascript" src="https://rawgit.com/schmich/instascan-builds/master/instascan.min.js"></script>
-    --}}
 
     <script type="text/javascript">
-        const preview = document.getElementById('preview');
-        const isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        function onQRCodeScanned(scannedText) {
+            var scannedDataElement = document.getElementById("scannedData");
 
-        // Função para ajustar a orientação da câmera no dispositivo móvel
-        function adjustCameraOrientation(selectedCameraId) {
-            if (isMobileDevice) {
-                if (selectedCameraId === 'back') {
-                    preview.style.transform = 'rotateY(180deg) scaleX(-1)';
-                } else {
-                    preview.style.transform = ' scaleX(-1)';
-                }
-            } else {
-                preview.style.transform = 'scaleX(-1)';
+            if (scannedDataElement) {
+                // Criar uma nova linha na tabela para cada código escaneado
+                var newRow = document.createElement("tr");
+                var newData = document.createElement("td");
+                newData.textContent = scannedText;
+                newRow.appendChild(newData);
 
+                // Adicionar a nova linha à tabela
+                scannedDataElement.appendChild(newRow);
             }
         }
 
 
-        let scanner = null; // Inicializa o scanner Instascan
+        //this function will provide the video stream
+        function provideVideo() {
+            var n = navigator;
 
-        // Função para listar as câmeras e configurar o scanner
-        function listCamerasAndSetup() {
-            Instascan.Camera.getCameras().then(function(cameras) {
-                if (isMobileDevice) {
-                    let backCamera = null;
+            if (n.mediaDevices && n.mediaDevices.getUserMedia) {
+                return n.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: "environment"
+                    },
+                    audio: false
+                });
+            }
 
-                    cameras.forEach(function(camera) {
-                        if (camera.name.toLowerCase().includes('back') && !backCamera) {
-                            backCamera = camera;
+            return Promise.reject('Your browser does not support getUserMedia');
+        }
+
+        function provideVideoQQ() {
+            var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+            if (isMobile && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                return navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: {
+                            exact: 'environment'
                         }
-                    });
+                    },
+                    audio: false
+                });
+            } else if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                return navigator.mediaDevices.getUserMedia({
+                    video: true,
+                    audio: false
+                });
+            }
 
-                    if (backCamera) {
-                        setupScanner(backCamera);
-                    } else {
-                        console.error('No suitable cameras found.');
-                    }
-                } else {
-                    if (cameras.length > 0) {
-                        setupScannerForPC(cameras);
-                    } else {
-                        console.error('No cameras found.');
-                    }
-                }
-            }).catch(function(e) {
-                console.error(e);
-            });
+            return Promise.reject('Your browser does not support getUserMedia');
         }
 
-        // Função para configurar o scanner com a câmera selecionada (dispositivos móveis)
-        function setupScanner(backCamera) {
-            scanner = new Instascan.Scanner({
-                video: preview
-            });
 
-            // orientar imagem depois que ela aparecer na tela
-            preview.addEventListener('loadedmetadata', function() {
-                const selectedCameraId = 'back'; 
-                adjustCameraOrientation(selectedCameraId);
-            });
 
-            scanner.addListener('scan', function(content) {
-                console.log(content);
-                updateScannedData(content);
-            });
 
-            scanner.start(backCamera);
-        }
-
-        // Função para configurar o scanner com a câmera selecionada (PC)
-        function setupScannerForPC(cameras) {
-
-            scanner = new Instascan.Scanner({
-                video: preview
-            });
-
-            scanner.addListener('scan', function(content) {
-                console.log(content);
-                updateScannedData(content);
-            });
-
-            if (cameras.length > 0) {
-                scanner.start(cameras[0]);
-            } else {
-                console.error('No cameras found.');
+        //this function will be called when JsQRScanner is ready to use
+        function JsQRScannerReady() {
+            //create a new scanner passing to it a callback function that will be invoked when the scanner succesfully scan a QR code
+            var jbScanner = new JsQRScanner(onQRCodeScanned);
+            //var jbScanner = new JsQRScanner(onQRCodeScanned, provideVideo);
+            //reduce the size of analyzed image to increase performance on mobile devices
+            jbScanner.setSnapImageMaxSize(300);
+            var scannerParentElement = document.getElementById("scanner");
+            if (scannerParentElement) {
+                //append the jbScanner to an existing DOM element
+                jbScanner.appendTo(scannerParentElement);
             }
         }
-
-        // Função para atualizar a tabela com o código escaneado
-        function updateScannedData(content) {
-            let scannedData = document.getElementById('scannedData');
-            let newRow = scannedData.insertRow();
-            let newCell = newRow.insertCell(0);
-            newCell.textContent = content;
-        }
-
-        // Inicia a configurações ao carregar a página
-        listCamerasAndSetup();
     </script>
 
 </div>
