@@ -1,8 +1,15 @@
 <div>
+    <!-- Vídeo da câmera -->
     <div>
-        <div class="qrscanner" id="scanner"></div>
+        {{-- mostra a camera --}}
+        <div class="qrscanner" id="scanner">
+        </div>
+
     </div>
 
+    <!-- Estilo CSS -->
+
+    <!-- Mostrar o código escaneado -->
     <div class="table-responsive">
         <table class="table table-bordered table-hover">
             <thead>
@@ -14,23 +21,34 @@
         </table>
     </div>
 
+
+
+    <!-- Inclua o script para instascan -->
     <script type="text/javascript" src="/js/js/jsqrscanner.nocache.js"></script>
+
 
     <script type="text/javascript">
         function onQRCodeScanned(scannedText) {
             var scannedDataElement = document.getElementById("scannedData");
 
             if (scannedDataElement) {
+                // Criar uma nova linha na tabela para cada código escaneado
                 var newRow = document.createElement("tr");
                 var newData = document.createElement("td");
                 newData.textContent = scannedText;
                 newRow.appendChild(newData);
+
+                // Adicionar a nova linha à tabela
                 scannedDataElement.appendChild(newRow);
             }
 
             Livewire.emit('scan', scannedText);
         }
 
+        function provideVideo() {
+            var n = navigator;
+
+        //this function will provide the video stream
         function provideVideo() {
             var n = navigator;
 
@@ -68,25 +86,21 @@
             return Promise.reject('Your browser does not support getUserMedia');
         }
 
+
+
+
+        //this function will be called when JsQRScanner is ready to use
         function JsQRScannerReady() {
+            //create a new scanner passing to it a callback function that will be invoked when the scanner succesfully scan a QR code
             var jbScanner = new JsQRScanner(onQRCodeScanned);
+            //var jbScanner = new JsQRScanner(onQRCodeScanned, provideVideo);
+            //reduce the size of analyzed image to increase performance on mobile devices
             jbScanner.setSnapImageMaxSize(300);
             var scannerParentElement = document.getElementById("scanner");
             if (scannerParentElement) {
+                //append the jbScanner to an existing DOM element
                 jbScanner.appendTo(scannerParentElement);
             }
         }
-
-        document.addEventListener('close-modal', function (event) {
-            var modal = document.querySelector('x-filament::modal');
-            if (modal) {
-                modal.remove(); // Fechar o modal
-            }
-
-            var qrCodeInput = document.querySelector('input[name="QrCode"]');
-            if (qrCodeInput) {
-                qrCodeInput.value = event.detail.code; // Preencher o campo com o código QR escaneado
-            }
-        });
     </script>
 </div>
