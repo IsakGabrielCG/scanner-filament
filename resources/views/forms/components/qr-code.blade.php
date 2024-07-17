@@ -31,7 +31,10 @@
 </x-filament::link> --}}
 
 
-<x-filament::modal>
+
+{{-- resources/views/forms/components/qr-code.blade.php --}}
+
+<x-filament::modal id="QrCodeModal">
     <x-slot name="trigger">
         <x-filament::button icon="heroicon-o-qr-code">
             QrCode
@@ -43,11 +46,12 @@
     </x-slot>
 
     <x-slot name="description">
-        Aponte a camera para o QrCode
+        Aponte a câmera para o QrCode
     </x-slot>
 
     <div class="container">
         @livewire('qr-code-scanner')
     </div>
+
 </x-filament::modal>
 

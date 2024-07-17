@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Filament\Resources;
 
 use App\Filament\Forms\Components\QrCode;
@@ -24,7 +25,6 @@ class TestesResource extends Resource
                     ->label('Name'),
                 Forms\Components\TextInput::make('QrCode')
                     ->label('QrCode')
-                    ->disabled()
                     ->suffixIcon('heroicon-o-qr-code')
                     ->reactive()
                     ->afterStateUpdated(function ($state, callable $set) {
