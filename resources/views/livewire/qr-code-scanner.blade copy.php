@@ -30,6 +30,9 @@
         // Variável global para armazenar o código escaneado
         var scannedCode = '';
 
+        // Conjunto para armazenar códigos QR já escaneados
+        var scannedCodesSet = new Set();
+
         // Função para verificar se scannedCode não está vazio e fechar a modal
         function checkAndCloseModal() {
             var modalId = 'QrCodeModal'; // Substitua 'QrCodeModal' pelo ID real da sua modal
@@ -45,21 +48,26 @@
 
         // Chamada da função após escanear o código
         function onQRCodeScanned(scannedText) {
-            scannedCode = scannedText; // Salva o código escaneado na variável global
-            var scannedDataElement = document.getElementById("scannedData");
+            // Verifique se o código já foi escaneado
+            if (!scannedCodesSet.has(scannedText)) {
+                scannedCode = scannedText; // Salva o código escaneado na variável global
+                scannedCodesSet.add(scannedText); // Adiciona o código ao conjunto
 
-            if (scannedDataElement) {
-                // Criar uma nova linha na tabela para cada código escaneado
-                var newRow = document.createElement("tr");
-                var newData = document.createElement("td");
-                newData.textContent = scannedText;
-                newRow.appendChild(newData);
+                var scannedDataElement = document.getElementById("scannedData");
 
-                // Adicionar a nova linha à tabela
-                scannedDataElement.appendChild(newRow);
+                if (scannedDataElement) {
+                    // Criar uma nova linha na tabela para cada código escaneado
+                    var newRow = document.createElement("tr");
+                    var newData = document.createElement("td");
+                    newData.textContent = scannedText;
+                    newRow.appendChild(newData);
 
-                // Após adicionar o código escaneado, verifique e feche a modal
-                checkAndCloseModal();
+                    // Adicionar a nova linha à tabela
+                    scannedDataElement.appendChild(newRow);
+
+                    // Após adicionar o código escaneado, verifique e feche a modal
+                    checkAndCloseModal();
+                }
             }
         }
 

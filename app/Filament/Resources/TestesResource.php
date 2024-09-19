@@ -31,9 +31,7 @@ class TestesResource extends Resource
                         $set('QrCode', $state);
                     }),
 
-                QrCode::make('QrCodeButton')
-                    ->label('Camera')
-                    ->reactive(),
+                QrCode::make('QrCodeButton'),
             ]);
     }
 

@@ -34,24 +34,39 @@
 
 {{-- resources/views/forms/components/qr-code.blade.php --}}
 
+ {{-- <x-filament::modal id="QrCodeModal">
+
+
+
+
+ 
+eeeee
+</x-filament::modal>  --}}
+
+
+<div>
+    @livewire('qr-code-scanner')
+</div>
+
+
+
+{{-- 
+
 <x-filament::modal id="QrCodeModal">
     <x-slot name="trigger">
         <x-filament::button icon="heroicon-o-qr-code">
             QrCode
         </x-filament::button>
+
     </x-slot>
 
-    <x-slot name="heading">
-        Leitor de QrCode
-    </x-slot>
+    <x-filament::button icon="heroicon-o-qr-code">
+        QrCode
+    </x-filament::button>
+    dsadsa
+    as
+    asdasd
+    asdasd
 
-    <x-slot name="description">
-        Aponte a câmera para o QrCode
-    </x-slot>
-
-    <div class="container">
-        @livewire('qr-code-scanner')
-    </div>
-
-</x-filament::modal>
+</x-filament::modal> --}}
 
